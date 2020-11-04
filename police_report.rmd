@@ -11,6 +11,8 @@ setwd("~/Documents/gainsville_exercise")
 library(tidyverse); theme_set(theme_minimal())
 library(knitr)
 library(janitor)
+library(maps)
+library(sf)
 ```
 
 # Introduction
@@ -20,8 +22,10 @@ The data for this exploration is based on the public _"Crime Responses"_ data se
 
 Additional information about districts is available [here](https://data.cityofgainesville.org/Geospatial-Maps-/Color-Coded-Gainesville-Police-Zones/qzci-z4wx)
 
-**Note**:\n
-Data is being prepared by an external script.\n
+**Note**:
+
+Data is being prepared by an external script.
+
 - Correcting date types
 - Better variable naming
 - Removing extraneous variables
@@ -33,7 +37,37 @@ source('cleaning_script.r')
 
 ```{r initial look}
 head(responses) 
-summary(responses)
+summary(responses) 
 ```
+
+# Initial Visualizations
+
+```{r}
+fl_counties <- map_data("county","florida") %>% 
+  select(lon = long, lat, group, id = subregion)
+head(fl_counties)
+
+ggplot(fl_counties, aes(lon, lat, group = group)) +
+  geom_polygon(fill = "white", color = "gray") +
+  coord_quickmap()
+```
+
+
+```{r}
+responses %>% filter(year(offense_date) > 2014) %>% 
+  group_by(date = date(offense_date)) %>% 
+  summarise(offenses = n()) %>% 
+  
+  ggplot() + 
+  geom_smooth(aes(x = date, y = offenses)) +
+  
+  labs(title = "Offenses by Date") +
+  labs(subtitle = "2015 - Present") +
+  xlab("Year") +
+  ylab("Number of offenses")
+```
+
+
+
 
 

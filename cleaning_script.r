@@ -9,7 +9,7 @@ library(tidyverse)
 library(janitor)
 library(lubridate)
 
-
+### Responses
 # Import ------------------------------------------------------------------
 
 responses <- read_csv('data/Crime_Responses.csv')
@@ -21,7 +21,7 @@ responses <- responses %>% clean_names()
 # Type Setting ------------------------------------------------------------
 
 ## Incident Type
-# cat("There are ", n_distinct(responses$incident_type), " unique incident types.")
+ cat("There are ", n_distinct(responses$incident_type), " unique incident types.")
 # cat("\n Setting incident type to a categorical variable. \n")
 responses$incident_type <- responses$incident_type %>% factor()
 
@@ -49,3 +49,15 @@ cat("Removing location. Extraneous variable. \n")
 responses <- responses %>% select(-location)
 
 ## Completed Cleaning Responses
+
+### Areas
+## Import
+areas <- read_csv("data/Gainesville_Police_Zones.csv")
+areas <- areas %>% clean_names()
+
+# Removing duplicate rows
+areas <- unique(areas)
+
+areas$the_geom %>% str_extract(pattern = "(?<=\\().*(?=\\))") %>% 
+  str_extract(pattern = "(?<=\\().*(?=\\))") %>% 
+  str_extract(pattern = "(?<=\\().*(?=\\))") -> areas$the_geom

@@ -376,7 +376,13 @@ summary {
 <h1>Data</h1>
 <p>The data for this exploration is based on the public <em>“Crime Responses”</em> data set which is available <a href="https://data.cityofgainesville.org/Public-Safety/Crime-Responses/gvua-xt9q">here</a>. The version used in this report was last updated on November 3rd, 2020.</p>
 <p>Additional information about districts is available <a href="https://data.cityofgainesville.org/Geospatial-Maps-/Color-Coded-Gainesville-Police-Zones/qzci-z4wx">here</a></p>
-<p><strong>Note</strong>: Data is being prepared by an external script. - Correcting date types - Better variable naming - Removing extraneous variables</p>
+<p><strong>Note</strong>:</p>
+<p>Data is being prepared by an external script.</p>
+<ul>
+<li>Correcting date types</li>
+<li>Better variable naming</li>
+<li>Removing extraneous variables</li>
+</ul>
 <pre class="r"><code>head(responses) </code></pre>
 <pre><code>## # A tibble: 6 x 12
 ##       id incident_type report_date         offense_date        report_hour_of_…
@@ -390,39 +396,148 @@ summary {
 ## # … with 7 more variables: report_day_of_week &lt;chr&gt;, offense_hour_of_day &lt;dbl&gt;,
 ## #   offense_day_of_week &lt;chr&gt;, city &lt;fct&gt;, address &lt;chr&gt;, latitude &lt;dbl&gt;,
 ## #   longitude &lt;dbl&gt;</code></pre>
-<pre class="r"><code>summary(responses)</code></pre>
-<pre><code>##        id                                    incident_type   
-##  Min.   :1.187e+03   Theft Petit - Retail           :  9901  
-##  1st Qu.:2.130e+08   Trespass Warning               :  7485  
-##  Median :2.150e+08   Burglary to Conveyance         :  7369  
-##  Mean   :2.411e+08   Theft Petit - Other            :  6276  
-##  3rd Qu.:2.180e+08   Criminal Mischief (misdemeanor):  6022  
-##  Max.   :9.214e+09   Burglary to Residence          :  5525  
-##                      (Other)                        :121492  
-##   report_date                   offense_date                 report_hour_of_day
-##  Min.   :2011-01-01 01:30:10   Min.   :1915-09-20 12:00:00   Min.   : 0.00     
-##  1st Qu.:2013-03-15 09:25:57   1st Qu.:2013-03-05 09:48:25   1st Qu.: 8.00     
-##  Median :2015-08-13 09:59:46   Median :2015-08-03 03:22:30   Median :13.00     
-##  Mean   :2015-08-28 16:54:00   Mean   :2015-08-14 16:20:16   Mean   :12.35     
-##  3rd Qu.:2018-01-02 04:24:57   3rd Qu.:2017-12-21 12:11:49   3rd Qu.:18.00     
-##  Max.   :2020-11-03 02:15:35   Max.   :2020-11-02 12:00:00   Max.   :23.00     
-##                                                                                
-##  report_day_of_week offense_hour_of_day offense_day_of_week
-##  Length:164070      Min.   : 0.00       Length:164070      
-##  Class :character   1st Qu.: 7.00       Class :character   
-##  Mode  :character   Median :13.00       Mode  :character   
-##                     Mean   :12.11                          
-##                     3rd Qu.:18.00                          
-##                     Max.   :23.00                          
-##                                                            
-##              city          address             latitude       longitude      
-##  GAINESVILLE   :162840   Length:164070      Min.   :25.46   Min.   :-115.17  
-##  COUNTY        :   187   Class :character   1st Qu.:29.64   1st Qu.: -82.37  
-##  ALACHUA       :   180   Mode  :character   Median :29.65   Median : -82.34  
-##  UNINCORPERATED:   165                      Mean   :29.65   Mean   : -82.34  
-##  NEWBERRY      :   115                      3rd Qu.:29.67   3rd Qu.: -82.32  
-##  (Other)       :   558                      Max.   :44.24   Max.   : -71.01  
-##  NA&#39;s          :    25</code></pre>
+<pre class="r"><code>summary(responses) %&gt;% kable()</code></pre>
+<table style="width:100%;">
+<colgroup>
+<col width="1%"></col>
+<col width="6%"></col>
+<col width="14%"></col>
+<col width="10%"></col>
+<col width="10%"></col>
+<col width="7%"></col>
+<col width="7%"></col>
+<col width="7%"></col>
+<col width="7%"></col>
+<col width="8%"></col>
+<col width="6%"></col>
+<col width="5%"></col>
+<col width="6%"></col>
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">id</th>
+<th align="left">incident_type</th>
+<th align="left">report_date</th>
+<th align="left">offense_date</th>
+<th align="left">report_hour_of_day</th>
+<th align="left">report_day_of_week</th>
+<th align="left">offense_hour_of_day</th>
+<th align="left">offense_day_of_week</th>
+<th align="left">city</th>
+<th align="left">address</th>
+<th align="left">latitude</th>
+<th align="left">longitude</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">Min. :1.187e+03</td>
+<td align="left">Theft Petit - Retail : 9901</td>
+<td align="left">Min. :2011-01-01 01:30:10</td>
+<td align="left">Min. :1915-09-20 12:00:00</td>
+<td align="left">Min. : 0.00</td>
+<td align="left">Length:164070</td>
+<td align="left">Min. : 0.00</td>
+<td align="left">Length:164070</td>
+<td align="left">GAINESVILLE :162840</td>
+<td align="left">Length:164070</td>
+<td align="left">Min. :25.46</td>
+<td align="left">Min. :-115.17</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">1st Qu.:2.130e+08</td>
+<td align="left">Trespass Warning : 7485</td>
+<td align="left">1st Qu.:2013-03-15 09:25:57</td>
+<td align="left">1st Qu.:2013-03-05 09:48:25</td>
+<td align="left">1st Qu.: 8.00</td>
+<td align="left">Class :character</td>
+<td align="left">1st Qu.: 7.00</td>
+<td align="left">Class :character</td>
+<td align="left">COUNTY : 187</td>
+<td align="left">Class :character</td>
+<td align="left">1st Qu.:29.64</td>
+<td align="left">1st Qu.: -82.37</td>
+</tr>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">Median :2.150e+08</td>
+<td align="left">Burglary to Conveyance : 7369</td>
+<td align="left">Median :2015-08-13 09:59:46</td>
+<td align="left">Median :2015-08-03 03:22:30</td>
+<td align="left">Median :13.00</td>
+<td align="left">Mode :character</td>
+<td align="left">Median :13.00</td>
+<td align="left">Mode :character</td>
+<td align="left">ALACHUA : 180</td>
+<td align="left">Mode :character</td>
+<td align="left">Median :29.65</td>
+<td align="left">Median : -82.34</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">Mean :2.411e+08</td>
+<td align="left">Theft Petit - Other : 6276</td>
+<td align="left">Mean :2015-08-28 16:54:00</td>
+<td align="left">Mean :2015-08-14 16:20:16</td>
+<td align="left">Mean :12.35</td>
+<td align="left">NA</td>
+<td align="left">Mean :12.11</td>
+<td align="left">NA</td>
+<td align="left">UNINCORPERATED: 165</td>
+<td align="left">NA</td>
+<td align="left">Mean :29.65</td>
+<td align="left">Mean : -82.34</td>
+</tr>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">3rd Qu.:2.180e+08</td>
+<td align="left">Criminal Mischief (misdemeanor): 6022</td>
+<td align="left">3rd Qu.:2018-01-02 04:24:57</td>
+<td align="left">3rd Qu.:2017-12-21 12:11:49</td>
+<td align="left">3rd Qu.:18.00</td>
+<td align="left">NA</td>
+<td align="left">3rd Qu.:18.00</td>
+<td align="left">NA</td>
+<td align="left">NEWBERRY : 115</td>
+<td align="left">NA</td>
+<td align="left">3rd Qu.:29.67</td>
+<td align="left">3rd Qu.: -82.32</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">Max. :9.214e+09</td>
+<td align="left">Burglary to Residence : 5525</td>
+<td align="left">Max. :2020-11-03 02:15:35</td>
+<td align="left">Max. :2020-11-02 12:00:00</td>
+<td align="left">Max. :23.00</td>
+<td align="left">NA</td>
+<td align="left">Max. :23.00</td>
+<td align="left">NA</td>
+<td align="left">(Other) : 558</td>
+<td align="left">NA</td>
+<td align="left">Max. :44.24</td>
+<td align="left">Max. : -71.01</td>
+</tr>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">NA</td>
+<td align="left">(Other) :121492</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA’s : 25</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+</tr>
+</tbody>
+</table>
 </div>
 
 
