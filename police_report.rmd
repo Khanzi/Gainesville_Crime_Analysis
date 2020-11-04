@@ -1,0 +1,14 @@
+---
+title: "City Of Gainseville"
+author: "Kahlil Wehmeyer - Office of Strategic Initiatives"
+date: "11/4/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+setwd("~/Documents/gainsville_exercise")
+library(tidyverse); theme_set(theme_minimal())
+library(janitor)
+```
+
