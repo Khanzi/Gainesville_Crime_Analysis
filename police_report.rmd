@@ -9,6 +9,31 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 setwd("~/Documents/gainsville_exercise")
 library(tidyverse); theme_set(theme_minimal())
+library(knitr)
 library(janitor)
 ```
+
+# Introduction
+
+# Data
+The data for this exploration is based on the public _"Crime Responses"_ data set which is available [here](https://data.cityofgainesville.org/Public-Safety/Crime-Responses/gvua-xt9q). The version used in this report was last updated on November 3rd, 2020.
+
+Additional information about districts is available [here](https://data.cityofgainesville.org/Geospatial-Maps-/Color-Coded-Gainesville-Police-Zones/qzci-z4wx)
+
+**Note**:\n
+Data is being prepared by an external script.\n
+- Correcting date types
+- Better variable naming
+- Removing extraneous variables
+
+
+```{r importing data, echo=FALSE, include=FALSE}
+source('cleaning_script.r')
+```
+
+```{r initial look}
+head(responses) 
+summary(responses)
+```
+
 
