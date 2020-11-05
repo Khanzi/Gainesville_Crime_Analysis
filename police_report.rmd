@@ -10,6 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 setwd("~/Documents/gainsville_exercise")
 library(tidyverse); theme_set(theme_minimal())
 library(knitr)
+library(patchwork)
 library(janitor)
 library(maps)
 library(sf)
@@ -42,15 +43,6 @@ summary(responses)
 
 # Initial Visualizations
 
-```{r}
-fl_counties <- map_data("county","florida") %>% 
-  select(lon = long, lat, group, id = subregion)
-head(fl_counties)
-
-ggplot(fl_counties, aes(lon, lat, group = group)) +
-  geom_polygon(fill = "white", color = "gray") +
-  coord_quickmap()
-```
 
 
 ```{r}
@@ -67,7 +59,48 @@ responses %>% filter(year(offense_date) > 2014) %>%
   ylab("Number of offenses")
 ```
 
+```{r}
+ggplot() +
+  geom_sf(data = areas) +
+  geom_sf(data = head(responses,40)) 
+
+```
 
 
+```{r}
+responses %>% 
+  filter(year(offense_date) > 2014) %>% 
+  group_by(year = year(offense_date), incident_type) %>% 
+  summarise(count = n()) %>% 
+  group_by(year) %>% 
+  top_n(n = 3, wt = count) %>% 
+  
+  ggplot(aes(x = year, y = count, fill = incident_type)) +
+  geom_bar(position = "dodge", stat="identity") +
+  
+  # Labels
+  labs(title = "Top 3 Incidents by Year") + 
+  labs(subtitle = "2015 - 2020") +
+  xlab("Year") + 
+  ylab("Count") +
+  labs(fill = "Incident Type") +
+  
+  annotate("segment",
+           y = 636, yend = 636,
+           x = 2017.5,xend = 2018.5,
+           alpha = 0.4, size = 1, linetype=1) +
 
+  annotate("text", label = "Equal number of incidents.",
+           y = 1200, x = 2019) +
+  
+  annotate("curve",
+           y = 1140, yend = 680,
+           x = 2019, xend = 2018,
+           curvature = 0.3,
+           arrow = arrow(length = unit(2, "mm")))
+  
+  
+```
+```{r}
+```
 

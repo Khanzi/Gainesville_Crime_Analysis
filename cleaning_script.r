@@ -8,14 +8,16 @@ setwd("~/Documents/gainsville_exercise")
 library(tidyverse)
 library(janitor)
 library(lubridate)
+library(sf)
 
 ### Responses
 # Import ------------------------------------------------------------------
 
-responses <- read_csv('data/Crime_Responses.csv')
+responses <- read_sf('data/Crime_Responses.csv')
 
 responses <- responses %>% clean_names()
 
+areas <- read_sf("data/Gainesville Police Zones.geojson")
 
 
 # Type Setting ------------------------------------------------------------
@@ -43,21 +45,18 @@ cat("State has ", n_distinct(responses$state), " unique values.\n")
 cat("\n Removing state variable. It does not offer information.\n")
 responses <- responses %>% select(-state)
 
-# Point
+# Coordinates
+responses$longitude <- as.numeric(responses$longitude)
+responses$latitude <- as.numeric(responses$latitude)
+st_as_sf(responses, coords = c("longitude", "latitude"), crs = st_crs(areas)) -> responses
 
-cat("Removing location. Extraneous variable. \n")
-responses <- responses %>% select(-location)
+# Determining which police zones incidents occured
+st_join(responses, areas, join = st_within) -> responses
 
-## Completed Cleaning Responses
+# Removing extraneous variables
+responses %>% select(-location, -shape_area, -shape_leng) -> responses
 
-### Areas
-## Import
-areas <- read_csv("data/Gainesville_Police_Zones.csv")
-areas <- areas %>% clean_names()
-
-# Removing duplicate rows
-areas <- unique(areas)
-
-areas$the_geom %>% str_extract(pattern = "(?<=\\().*(?=\\))") %>% 
-  str_extract(pattern = "(?<=\\().*(?=\\))") %>% 
-  str_extract(pattern = "(?<=\\().*(?=\\))") -> areas$the_geom
+# Type setting districts, sectors ect,.
+responses$district <- responses$district %>% factor()
+responses$sector <- responses$sector %>% factor()
+responses$label <- responses$label %>% factor()
