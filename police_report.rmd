@@ -6,17 +6,37 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
 setwd("~/Documents/gainsville_exercise")
 library(tidyverse); theme_set(theme_minimal())
 library(knitr)
 library(patchwork)
 library(janitor)
 library(maps)
+library(lubridate)
 library(sf)
 ```
 
 # Introduction
+
+## What should be avoided
+<br>
+
+<h4 align=center>_The policing itself spawns new data, which justifies more policing_</h4>
+
+<p align=right> Cathy 'O Neil, _Weapons of Math Destruction_       </p>
+
+[**Goodhart's Law**](https://en.wikipedia.org/wiki/Goodhart%27s_law) states that
+
+> When a measure becomes a target, it ceases to be a good measure.
+
+To frame it in the context of the data. If we determine Police strategy, specifically geographically, using police collected data then we run into a precocious feedback loop. Not only does the data enforce it's own bias but it leads to a less equitable community overall.
+
+There is plenty of research done on why report driven policing strategy is generally a bad idea.
+Therefore, I will shift the focus of this study more on the needs of communities to increase safety, quality of life, and equality.
+
 
 # Data
 The data for this exploration is based on the public _"Crime Responses"_ data set which is available [here](https://data.cityofgainesville.org/Public-Safety/Crime-Responses/gvua-xt9q). The version used in this report was last updated on November 3rd, 2020.
@@ -33,41 +53,68 @@ Data is being prepared by an external script.
 
 
 ```{r importing data, echo=FALSE, include=FALSE}
-source('cleaning_script.r')
+if (!file.exists("data/cleaned_responses.csv")) {
+  source("cleaning_script.r")
+} else {
+  responses <- read_sf("data/cleaned_responses.csv")
+  areas <- read_sf("data/Gainesville Police Zones.geojson") 
+}
 ```
 
-```{r initial look}
-head(responses) 
-summary(responses) 
-```
 
-# Initial Visualizations
-
-
-
-```{r}
-responses %>% filter(year(offense_date) > 2014) %>% 
-  group_by(date = date(offense_date)) %>% 
-  summarise(offenses = n()) %>% 
+```{r district_layouts}
+ggplot(data = areas) +
+  geom_sf(aes(fill=district))+
   
-  ggplot() + 
-  geom_smooth(aes(x = date, y = offenses)) +
+  labs(title = "Districts") +
+  guides(fill=FALSE) +
+  theme_void() -> police_districts
+ggplot(data = areas) +
+  geom_sf(aes(fill=district)) +
+  geom_sf(aes(fill = sector)) +
   
-  labs(title = "Offenses by Date") +
-  labs(subtitle = "2015 - Present") +
-  xlab("Year") +
-  ylab("Number of offenses")
+  labs(title = "Sectors") +
+  guides(fill=FALSE) +
+  theme_void() -> police_sectors
+ggplot(data = unique(areas)) +
+  geom_sf(aes(fill=objectid)) +
+  
+  # Axis and titles
+  labs(title = "Zones") +
+  guides(fill=FALSE) +
+  theme_void() -> police_zones
+
+(police_districts + police_sectors) + police_zones + 
+  plot_annotation(title = "Police",
+                  theme = theme(plot.title = element_text(size=30,hjust = 0.5, vjust = 1))) 
 ```
 
-```{r}
-ggplot() +
-  geom_sf(data = areas) +
-  geom_sf(data = head(responses,40)) 
 
+```{r data_outside_districts}
+responses %>% 
+  count(in_district) %>% 
+  mutate(pct = prop.table(n)) %>% 
+  
+  ggplot(aes(x = in_district, y = pct, label = scales::percent(pct), fill = in_district)) +
+  geom_col() +
+  geom_text(position = position_dodge(width = 0.1), vjust = -0.5, size = 4) +
+  
+  # Labels and Axis
+  labs(title = "Percentage of Incidents That Occured Within Police Zones") +
+  xlab("In Police Zones") +
+  ylab("Percentage") +
+  
+  guides(fill = FALSE)
+```
+
+There is a small percentage of crimes that have locations outside of the given geographic areas. Some of them reside somewhere else outside of Florida, and there is a handful that are out of state. Our focus is on improving life for the immediate community, therefore those records will be discarded for the time being.
+
+```{r filtering_out_of_district}
+responses <- responses %>% filter(!is.na(label))
 ```
 
 
-```{r}
+```{r most_common_offenses}
 responses %>% 
   filter(year(offense_date) > 2014) %>% 
   group_by(year = year(offense_date), incident_type) %>% 
@@ -83,24 +130,127 @@ responses %>%
   labs(subtitle = "2015 - 2020") +
   xlab("Year") + 
   ylab("Count") +
-  labs(fill = "Incident Type") +
+  labs(fill = "Incident Type") 
   
-  annotate("segment",
-           y = 636, yend = 636,
-           x = 2017.5,xend = 2018.5,
-           alpha = 0.4, size = 1, linetype=1) +
+```
 
-  annotate("text", label = "Equal number of incidents.",
-           y = 1200, x = 2019) +
+
+```{r overall_offense_count}
+responses %>% filter(year(offense_date) > 2014) %>% 
+  group_by(date = date(offense_date)) %>% 
+  summarise(offenses = n()) %>% 
+  
+  ggplot() + 
+  geom_smooth(aes(x = date, y = offenses)) +
+  
+  labs(title = "Offenses by Date") +
+  labs(subtitle = "2015 - Present") +
+  xlab("Year") +
+  ylab("Number of offenses")
+```
+# Alpha
+```{r mcc_zone_func}
+mcc_zone <- function(zone) {
+  
+  responses %>% 
+    filter(label == zone) %>% 
+    group_by(year = year(offense_date), incident_type) %>% 
+    summarise(count = n()) %>% 
+    group_by(year) %>% 
+    top_n(n = 3, wt = count) %>% 
+    
+    ggplot() +
+    geom_col(aes(x = 0, y = count, fill = incident_type), position = "dodge") +
+    facet_wrap(~year) +
+    
+    labs(title = paste0("Most Common Crimes | Zone ",zone)) +
+    labs(fill = "Incident Type") +
+    
+    theme(
+      axis.title.x = element_blank(),
+      axis.ticks.x = element_blank(),
+      axis.text.x = element_blank()
+    )
+}
+```
+
+# Common Crimes 
+Here we will look at a general trend in crimes for all zones **excluding** zone Echo.
+```{r}
+mcc_zone("Alpha")
+mcc_zone("Bravo")
+mcc_zone("Charlie")
+mcc_zone("Delta")
+mcc_zone("Foxtrot")
+mcc_zone("Golf")
+mcc_zone("Hotel")
+mcc_zone("India")
+mcc_zone("Juliet")
+mcc_zone("Mike")
+mcc_zone("November")
+```
+
+
+We see a general trend in that all the zones have been greatly successful in reducing the number of crimes committed in recent years. Whatever strategy has been implemented in helping reduce crime has been highly effective. However, the crime that seems to prevail in concerning numbers is Burglary to a Conveyance. 
+
+```{r street_lights}
+responses %>% 
+  filter(incident_type == "Burglary to Conveyance") %>% 
+  mutate(offense_hour = as.integer(offense_hour_of_day)) %>% 
+  
+  ggplot(aes(x = offense_hour)) +
+  geom_density() +
+  geom_histogram(alpha = 0.4, fill = "gold", aes(y=..density..)) +
+  
+  # Labels and Titles
+  labs(title = "When do burglary of conveyances happen?") +
+  labs(subtitle = "For all zones") +
+  xlab("Hour of Day") +
+  ylab("Density") +
+  
+  # Annotations
+  annotate("rect",
+           ymin = 0.04, ymax = 0.1,
+           xmin = 17, xmax = 22,
+           alpha = 0.2) +
+  
+  annotate("text", label = "Darker hours",
+           x =  7.5, y = 0.06) +
   
   annotate("curve",
-           y = 1140, yend = 680,
-           x = 2019, xend = 2018,
-           curvature = 0.3,
-           arrow = arrow(length = unit(2, "mm")))
+           x = 10, xend = 15.5,
+           y = 0.06, yend = 0.07,
+           curvature = -0.2,
+           arrow = arrow(length = unit(2,"mm"))) +
   
-  
+  annotate("curve",
+           x = 5, xend = 1,
+           y = 0.06, yend = 0.07,
+           curvature = 0.2,
+           arrow = arrow(length = unit(2,"mm"))) 
+
 ```
+
+I hypothesis that if we provide better street side illumination, not only would it deter conveyance burglaries, it would also enhance the safety of pedestrians, increase civilian surveillance as well as increase driver awareness in streets, parking lots, and driveways.
+
 ```{r}
+mcc_zone("Echo")
 ```
+
+Unlike the previous zones, we see that petit retail theft has been an issue in Echo for a long time. It still is to this day. In fact, Echo makes up roughly 30% of **all** petit retail thefts.
+The question becomes - is there some need that is not being met which is causing the disproportionate number of these crimes? We can't say concretely, but suspicions can be placed on impoverishment. Perhaps creating opportunities for charitable institutions to come in and provide an alternative to theft.
+
+Regardless of the ideas on how to create a safer community for businesses, we believe it is crucial to perform a more in depth study on this zone with a goal of understanding what external factors drive the high theft numbers. Perhaps this could be an area of focus for 2021.
+
+```{r echo_petit_theft_pct}
+non_echo_theft <- responses %>% 
+  filter(label != "Echo" & incident_type == "Theft Petit - Retail") %>% nrow()
+
+echo_theft <- responses %>% 
+  filter(label == "Echo" & incident_type == "Theft Petit - Retail") %>% nrow()
+
+total_theft <- non_echo_theft + echo_theft
+cat(round((echo_theft/total_theft)*100, 2), "% of Petit Theft Retail crimes are commited in the Echo Zone")
+```
+
 

@@ -10,6 +10,13 @@ library(janitor)
 library(lubridate)
 library(sf)
 
+if (file.exists("data/cleaned_responses.csv")) {
+ responses <- read_csv("data/cleaned_responses.csv") 
+ areas <- read_sf("data/Gainesville Police Zones.geojson")
+ stop("Not an error: Prepared data found on disk.\n Scrip continuing as should")
+ 
+}
+
 ### Responses
 # Import ------------------------------------------------------------------
 
@@ -17,10 +24,13 @@ responses <- read_sf('data/Crime_Responses.csv')
 
 responses <- responses %>% clean_names()
 
+
 areas <- read_sf("data/Gainesville Police Zones.geojson")
 
-
 # Type Setting ------------------------------------------------------------
+
+## ID
+responses$id <- responses$id %>% as.integer()
 
 ## Incident Type
  cat("There are ", n_distinct(responses$incident_type), " unique incident types.")
@@ -34,6 +44,9 @@ responses$report_date <- responses$report_date %>% parse_date_time(orders = "mdy
 
 ## Offense date
 responses$offense_date <- responses$offense_date %>% parse_date_time(orders = "mdy HMS") %>% as_datetime()
+
+# Filtering for 2015 -> 
+responses <- responses %>% filter(year(offense_date) > 2014)
 
 ## City
 cat("City has ", n_distinct(responses$city), " unique values.\n")
@@ -52,6 +65,7 @@ st_as_sf(responses, coords = c("longitude", "latitude"), crs = st_crs(areas)) ->
 
 # Determining which police zones incidents occured
 st_join(responses, areas, join = st_within) -> responses
+areas <- areas %>% as_tibble() %>% select(objectid, poly = geometry)
 
 # Removing extraneous variables
 responses %>% select(-location, -shape_area, -shape_leng) -> responses
@@ -60,3 +74,13 @@ responses %>% select(-location, -shape_area, -shape_leng) -> responses
 responses$district <- responses$district %>% factor()
 responses$sector <- responses$sector %>% factor()
 responses$label <- responses$label %>% factor()
+responses$objectid <- responses$objectid %>% factor()
+
+# Feature engineering
+responses$in_district <- !is.na(responses$objectid)
+
+# Writing cleaned data
+responses %>% write_csv("data/cleaned_responses.csv")
+
+areas <- read_sf("data/Gainesville Police Zones.geojson")
+
