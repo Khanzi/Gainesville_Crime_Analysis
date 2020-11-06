@@ -45,6 +45,10 @@ responses$report_date <- responses$report_date %>% parse_date_time(orders = "mdy
 ## Offense date
 responses$offense_date <- responses$offense_date %>% parse_date_time(orders = "mdy HMS") %>% as_datetime()
 
+responses$offense_day_of_week <- factor(responses$offense_day_of_week, levels = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday","Sunday"))
+responses$report_day_of_week <- factor(responses$report_day_of_week, levels = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday","Sunday"))
+
+
 # Filtering for 2015 -> 
 responses <- responses %>% filter(year(offense_date) > 2014)
 
@@ -61,11 +65,11 @@ responses <- responses %>% select(-state)
 # Coordinates
 responses$longitude <- as.numeric(responses$longitude)
 responses$latitude <- as.numeric(responses$latitude)
-st_as_sf(responses, coords = c("longitude", "latitude"), crs = st_crs(areas)) -> responses
+st_as_sf(responses, coords = c("longitude", "latitude"), crs = st_crs(areas), remove=FALSE) -> responses
 
 # Determining which police zones incidents occured
 st_join(responses, areas, join = st_within) -> responses
-areas <- areas %>% as_tibble() %>% select(objectid, poly = geometry)
+areas <- areas %>% as_tibble() 
 
 # Removing extraneous variables
 responses %>% select(-location, -shape_area, -shape_leng) -> responses
