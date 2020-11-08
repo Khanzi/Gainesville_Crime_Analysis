@@ -10,6 +10,8 @@ This was a take home project for the City Of Gainesville Office of Strategic Ini
 
 All opinions and insights are my own.
 
+I highly recommend that if you view the report that you use the HTML version.
+
 <br>
 
 ### Data
