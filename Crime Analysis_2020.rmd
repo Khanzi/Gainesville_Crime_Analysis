@@ -3,12 +3,12 @@ title: "Crime Analysis 2020"
 author: "Kahlil Wehmeyer"
 date: "11/4/2020"
 output:
-  html_document:
-    toc: yes
-    toc_float: yes
   pdf_document:
     toc: yes
     latex_engine: xelatex
+  html_document:
+    toc: yes
+    toc_float: yes
 subtitle: "Gainesville Office of Strategic Initiatives"
 ---
 
@@ -190,7 +190,8 @@ day_of_crime <- function(zone, it = "Burglary to Conveyance"){
 
 # Common Crimes 
 
-[CHANGE LATER]
+A high level overview of crime patterns across multiple zones will allow for holistic insights into
+actions that might be taken to help reduce crime.
 
 
 ## Time Trends
