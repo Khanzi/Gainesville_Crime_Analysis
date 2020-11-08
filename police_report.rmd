@@ -1,8 +1,15 @@
 ---
-title: "City Of Gainseville"
-author: "Kahlil Wehmeyer - Office of Strategic Initiatives"
+title: "Crime Analysis 2020"
+author: "Kahlil Wehmeyer"
 date: "11/4/2020"
-output: html_document
+output:
+  pdf_document:
+    toc: yes
+    latex_engine: xelatex
+  html_document:
+    toc: yes
+    toc_float: yes
+subtitle: "Gainesville Office of Strategic Initiatives"
 ---
 
 ```{r setup, include=FALSE}
@@ -20,21 +27,22 @@ library(lubridate)
 library(sf)
 ```
 
+\fontfamily{Arial}
+\fontsize{12}{22}
+\fontseries{b}
+\selectfont
+
 # Introduction
+
+The goal of this report is to identify crime trends in the Gainesville. 
+The hope is to aide in coordinating police more effectively, and generating ideas for how
+the community can be enhanced through programs, infrastructure changes and other social measures.
 
 
 # Data
 The data for this exploration is based on the public _"Crime Responses"_ data set which is available [here](https://data.cityofgainesville.org/Public-Safety/Crime-Responses/gvua-xt9q). The version used in this report was last updated on November 3rd, 2020.
 
 Additional information about districts is available [here](https://data.cityofgainesville.org/Geospatial-Maps-/Color-Coded-Gainesville-Police-Zones/qzci-z4wx)
-
-**Note**:
-
-Data is being prepared by an external script.
-
-- Correcting date types
-- Better variable naming
-- Removing extraneous variables
 
 
 ```{r importing data, echo=FALSE, include=FALSE}
@@ -93,7 +101,10 @@ responses %>%
   guides(fill = FALSE)
 ```
 
-There is a small percentage of crimes that have locations outside of the given geographic areas. Some of them reside somewhere else within of Florida, and there is a handful that are out of state. Our focus is on improving life for the immediate community, therefore those records will be discarded for the time being.
+There is a small percentage of crimes that have locations outside of the given geographic areas. 
+A small percentage of the crimes take place in other parts of Florida, with an even smaller
+percentage happening out of state.
+Our focus is on improving life for the immediate community, therefore those records will be discarded for the time being.
 
 ```{r filtering_out_of_district}
 responses <- responses %>% filter(!is.na(label))
@@ -136,7 +147,7 @@ area_plot <- function(zone, it = "Burglary to Conveyance"){
     summarise(n = n(), hour = median(as.integer(offense_hour_of_day)))
   
   ggplot() +
-    geom_sf(data = zone_area) +
+    geom_sf(data = zone_area, fill = "darkgray") +
     geom_sf(data = zone_reponses, aes(size = n, color = hour), alpha = 0.4) +
     
     theme(axis.text.x = element_text(angle = 45)) +
@@ -206,11 +217,13 @@ ggplot() +
   
   labs(title = "Heatmap of Crimes") +
   labs(subtitle = "Burglary of Conveyance | Excluding Echo and Juliet") +
-  scale_color_viridis_c(trans = "reverse")
+  scale_color_viridis_c(trans = "reverse") +
+  
+  guides(color = guide_legend(title="Hour of Day", override.aes = list(alpha = c(1), size = c(5))))
 
 ```
 
-Observe that the majority of points on the map are dark, indicating that the crime occurred at a later hour in the day. Let's observe the distribution of when these crimes are committed for all zones.
+Observe that the majority of points on the map are dark, indicating that the crime occurred at a later hour in the day. Note the distribution of when these crimes are committed for all zones.
 
 ```{r street_lights}
 responses %>% 
@@ -250,7 +263,7 @@ responses %>%
 
 ```
 
-I hypothesis that if we provide better street side illumination, not only would it deter conveyance burglaries, it would also enhance the safety of pedestrians, increase civilian surveillance as well as increase driver awareness in streets, parking lots, and driveways.
+It is possible that if we provide better street side illumination, not only would it deter conveyance burglaries, it would also enhance the safety of pedestrians, increase civilian surveillance as well as increase driver awareness in streets, parking lots, and driveways.
 
 ## Petit Theft - Retail
 
@@ -259,7 +272,7 @@ zone_areas <- areas %>%
   filter(label == "Echo" | label == "Juliet") 
 
 zone_response <- responses %>% 
-   filter(label == "Echo" | label == "Juliet" & incident_type == "Theft Petit - Retail") %>% 
+  filter(label == "Echo" | label == "Juliet" & incident_type == "Theft Petit - Retail") %>% 
   group_by(longitude, latitude) %>% 
   summarise(n = n(), hour = median(as.integer(offense_hour_of_day))) 
 
@@ -269,12 +282,15 @@ ggplot() +
   geom_sf(data = zone_response, aes(color = hour), alpha = 0.25) +
   
   labs(title = "Heatmap of Crimes") +
-  labs(subtitle = "Burglary of Conveyance | Excluding Echo and Juliet") +
+  labs(subtitle = "Theft Petit - Retail | Excluding Echo and Juliet") +
   scale_color_viridis_c(trans = "reverse") +
-  ylim(29.58, 29.68)
+  ylim(29.58, 29.68) +
+  
+  
+  guides(color = guide_legend(title="Hour of Day", override.aes = list(alpha = c(1), size = c(5))))
 ```
 
-Zone Echo (bottom left) actually accounts for 30% of all petit retail theft. In the drill down later you will see that there are 3 stores that almost account entirely for the count. They are: 
+Zone Echo (bottom left) accounts for 30% of all petit retail theft. In the drill down later it's observed that there are 3 stores that almost account entirely for the retail theft. They are: 
 
 - Walmart
 - Lowe's
@@ -298,7 +314,7 @@ responses %>% filter(year(offense_date) > 2014) %>%
   ylab("Number of offenses")
 ```
 
-This graph isn't heavily informative but it is good to see that crime has decreased steadily in the last 5 years.
+This graph displays that the steady crime decrease from 2015 to 2020.
 
 ```{r most_common_offenses}
 responses %>% 
@@ -320,7 +336,7 @@ responses %>%
   
 ```
 
-Lots of information can be gathered from this graph. We see that over the last 5 years the biggest plights to the community has been conveyance burglaries, retail theft, and _other_ forms of petit theft. In line with the previous graph we can see that these crimes have been reduced slightly in recent years.
+Over the last 5 years the biggest plights to the community has been conveyance burglaries, retail theft, and _other_ forms of petit theft. In agreement with the previous graph, it is evident that these crimes have been reduced in recent years.
 
 ```{r}
 top_crimes <- responses %>% 
@@ -345,16 +361,16 @@ responses %>%
   
 ```
 
-It's interesting to see that burglary to conveyance peaks drastically in July. Retail theft also seems to peak quite drastically in January. All other crimes tend to follow week patterns througout the year.
+Burglary to conveyance peaks drastically in July. Retail theft also seems to peak quite drastically in January. All other crimes tend to follow week patterns throughout the year.
 
 
 
 
 
 
-# Divide and Conquer Strategy
+# Deep Dive into Zones
 
-We think taking a deeper dive, dissecting the crime patters zone by zone will give a better idea of how we might help to reduce crime and increase community safety.
+Taking a deeper dive, dissecting the crime patterns zone by zone will give a better idea of how we might help to reduce crime and increase community safety.
 
 ## Alpha
 
@@ -362,7 +378,7 @@ We think taking a deeper dive, dissecting the crime patters zone by zone will gi
 mcc_zone("Alpha")
 ```
 
-Since 2015 the rate of conveyance burglaries has slowly declined, however it still continues to be the main source of crime in zone Alpha
+Since 2015 the rate of conveyance burglaries has slowly declined, however it still continues to be the main source of crime in zone Alpha.
 
 ```{r}
 area_plot("Alpha") + 
@@ -377,21 +393,24 @@ area_plot("Alpha") +
            ymin = 29.718, ymax = 29.732)
 ```
 
-The above heatmap shows the locations of conveyance burglaries in the zone. Notes the densely populated areas. These call for more police activity and patrolling. 
+The orange-ish lines indicate suggested police routes for this graph and the subsequent graphs.
+The rectangle indicates a hotspot of conveyance crimes. This would be useful for the police responsible for patrolling this zone by guiding their routes to optimize their coverage.
 
 ```{r}
 day_of_crime("Alpha") / time_of_crime("Alpha")
 ```
 
-The distribution of time that the burglaries occured agrees with
+The distribution of time that the burglaries occur agrees with the general trend that shown earlier in the report; darker hours of the day lead to more crimes. 
+There isn't a significantly prominent day of the week that the crimes tend to occur.
 
-# Bravo
+## Bravo
 
 ```{r}
 mcc_zone("Bravo")
 ```
 
-Bravo does not show a strong tend in crime changes. However, we can observe that in recent years, burglary to conveyance has remained prominent   and has even seen a slight increase from 2019.
+Bravo does not show a strong trend in crime change.
+However, observe that in recent years, burglary to conveyance has remained prominent and has even seen a slight increase from 2019.
 
 ```{r}
 area_plot("Bravo") + 
@@ -400,22 +419,33 @@ area_plot("Bravo") +
            y = 29.702, yend = 29.668)
 ```
 
-This heatmap shows a somewhat even distribution that is skewed towards the positive latitude. A decent strategy could be to position police officers along the NW/SE diagonal from 29.705°N to 82.34°W. This way the most of the area is covered, or is within relatively close distance.
+This heatmap shows a somewhat even distribution that is skewed towards the North. A decent strategy could be to position police officers along the NW/SE diagonal from 29.705°N to 82.34°W. This way the most of the area is covered, or is within relatively close distance.
+Note this orange lines are created by hand are not exactly drawn to reduce residual distance from crime centers.
+
+
 
 ```{r}
 day_of_crime("Bravo") / time_of_crime("Bravo")
 ```
 
-Sharing similarities with zone Alpha, most of the crimes are committed slightly before 10AM.
+Sharing similarities with zone Alpha, and the overall trend, darker hours
+lead to more crimes
+Additionally, observe a general trend that burglaries tend to occur later in the week. However,
+this is a very weak correlation.
 
-# Charlie
+## Charlie
 ```{r}
 mcc_zone("Charlie")
 ```
 
-Zone Charlie has seen a massive decline in crime since 2018. There seems to be a nearly equal share of both burglaries to conveyance, criminal mischief, and damage to property in 2020. Clearly whatever program or stategy was implemented to reduce burglary to conveyance in Zone Charlie should be considered, if possible, in other zones suffering from similar plights.
+Zone Charlie has seen a massive decline in crime since 2018.
+There seems to be a nearly equal share of both burglaries to 
+conveyance, criminal mischief, and damage to property in 2020.
+Clearly whatever program or strategy was implemented to reduce burglary
+to conveyance in Zone Charlie should be considered, if possible,
+in other zones suffering from similar plights.
 
-## Damage to property
+### Damage to property
 ```{r}
 area_plot("Charlie", "Damage to Property") +
   annotate("segment", color = "orangered",
@@ -427,16 +457,24 @@ area_plot("Charlie", "Damage to Property") +
            ymin = 29.652, ymax = 29.666)
 ```
 
-The majority of cases for damage to property occur in the Southeast corner of the area. Positioning a considerable amount of officers here is likely not a bad idea. Also, having a few officers occasionally patrolling along the NW/SE diagonal from 29.66°N to 82.375°W would be effective. Seeing as this diagnol could be covered by just a few officers and thwart those remaining cases of damage to property.
+The majority of cases for damage to property occur in the Southeast corner of the area.
+Positioning a considerable amount of officers here would be effective.
+Having a few officers occasionally patrolling along the NW/SE diagonal
+from 29.66°N to 82.375°W would be effective.
+Seeing as this diagonal could be covered by just a few officers and thwart those remaining cases of damage to property.
 
 ```{r}
 day_of_crime("Charlie", "Damage to Property") / time_of_crime("Charlie", "Damage to Property")
 ```
 
-We observe that there are two highpoints in the day for damage to property to occur. For a short period in the early morning hours. Then again around mid-day, from 12-5PM, tapering off as the night goes on.
-Again, it would be recommended that officers patrol the designated hot spots primarly during these hours to ensure the most effective use of their time.
+Note that there are two high points in the day for damage to property. For a short period in the early morning hours, then again around mid-day, from 12-5PM, tapering off as the night goes on.
+Again, it would be recommended that officers patrol the designated hot spots primarily during these hours to ensure the most effective use of their time.
 
-## Criminal Mischief
+It seems that Friday is the somewhat most prominent day for these crimes to occur. This is likely
+due to the fact that it's the start of the weekend. Children don't have school and people
+are drinking.
+
+### Criminal Mischief
 
 ```{r}
 area_plot("Charlie", "Criminal Mischief (misdemeanor)") +
@@ -449,12 +487,13 @@ area_plot("Charlie", "Criminal Mischief (misdemeanor)") +
            ymin = 29.652, ymax = 29.666)
 ```
 
-Similary to the damage to property map, we would highly recommend that officers focus their attention to the Southeast corner of this zone with a few officers doing routine patrolling around the remainder of the zone.
+Similarly to the damage to property map, it is recommend that officers focus their attention to the Southeast corner of this zone with a few officers doing routine patrolling around the remainder of the zone.
 
 ```{r}
 day_of_crime("Charlie", "Criminal Mischief (misdemeanor)") / time_of_crime("Charlie", "Criminal Mischief (misdemeanor)")
 ```
  Criminal mischief follows similar time trends as damage to property. Following roughly the same schedule as the previous suggestion, officers should be able to cover those areas effectively.
+
  
  
  ## Burglary of Conveyance
@@ -475,14 +514,15 @@ Yet again, a fair concentration of officers in the Southeast corner is advisable
 day_of_crime("Charlie") / time_of_crime("Charlie")
 ```
 
-Luckily, these crimes fit the same pattern of the other two prevalent crimes. However, starting the coordinated patrolling earlier in the day, around 9AM, would likely result in better coverage of the problem areas.
+Continuing the trend of crimes being committed later in the day, starting around dusk.
+The day of the week trend also continues to skew weakly towards the weekends.
 
-# Delta
+## Delta
 ```{r}
 mcc_zone("Delta")
 ```
 
-Retail theft has greatly been reduced in recent years with the new common culprit being burglary to conveyance for zone Delta. We shall focus on attacking the main area of crime for this zone.
+Retail theft has greatly been reduced in recent years with the new common culprit being burglary to conveyance for zone Delta. Emphasis will be placed on this crime since it is most prevalent.
 
 ```{r}
 area_plot("Delta") +
@@ -495,14 +535,18 @@ area_plot("Delta") +
            y = 29.635, yend = 29.635, color = "orangered")
 ```
 
-Due to the somewhat awkward nature of this area. it would be advised that officers patrol the central line of the polygon starting from 29.66°N, 82.41°W moving southeast to 29.635°N, 82.39°W and then eastbound along 29.634°N.
-The over-arching tend seems to be that the burglaries tend to be focused near the southeast quadrant.
+Due to the somewhat awkward nature of this area, it would be advised that officers patrol the central line of the polygon starting from 29.66°N, 82.41°W moving southeast to 29.635°N, 82.39°W and then eastbound along 29.634°N.
+The over-arching trend seems to be that the burglaries tend to be focused near the southeast quadrant.
 
 ```{r}
 day_of_crime("Delta") / time_of_crime("Delta")
 ```
 
-The peak hour for these burglaries tends to be around 11AM to 12PM. Therefore it is suggested that a significant number of officers start patrolling the designated routes from 8AM until 8PM. Obviously this would cover the majority of the occurences but if time is limited then a focus should be put on patrolling form 11AM to 12PM as previouslys stated.
+The trend continues to follow that of the previous zones and the overall trend. Crimes happen 
+at night time.
+It's also interesting to note that the day of the week graph skews slightly to Sunday.
+However, the difference is less than 50 incidents from Mon-Wed so it is not recommended to make any
+massive scheduling decisions based on this information.
 
 ## Echo
 ```{r}
@@ -516,7 +560,7 @@ The crime rate has decreased slightly since 2019 but clearly it has been difficu
 area_plot("Echo", "Theft Petit - Retail")
 ```
 
-The heatmap does not draw a representative picture of the data. We have a large share of retail crimes in this zone, yet if you compared it to some of the other maps it looks like this is possibly the safest zone!. However, observing the legend for crime count on th left leads us to examine those locations more in depth.
+The heatmap does not draw a representative picture of the data. There is large share of retail crimes in this zone, yet if compared it to some of the other maps it looks like this is possibly the safest zone. However, observing the legend for crime count on the left leads warrants examination of those locations more in depth.
 
 ```{r}
 responses %>% 
@@ -535,13 +579,13 @@ responses %>%
   ylab("No. of Thefts") +
   
   annotate("text", label = "Walmart",
-           y = 750, x = 1, color = "blue2") +
+           y = 750, x = 1, color = "white", size = 5.5) +
   
   annotate("text", label = "Lowe's",
-           y = 450, x = 6, color = "blue2") +
+           y = 450, x = 6, color = "white", size = 5.5) +
   
   annotate("text", label = "Target",
-           y = 225, x = 10, color = "blue2") +
+           y = 225, x = 10, color = "white", size = 5.5) +
   
   annotate("text", label = "This address points to a Pollo Tropical.\n However it's likely that the crimes actually\n occured at a nearby Target.",
            y = 1000, x = 9) +
@@ -552,7 +596,14 @@ responses %>%
            curvature = 0.2)
 ```
 
-The majority of thefts occur at Walmart, Lowe's and Target. All of these are within relatively close proximity in the shopping district. The question is, how do we prevent thefts in stores? 
+The majority of thefts occur at Walmart, Lowe's and Target. All of these are within relatively close proximity in the shopping district. The question is, how can theft be prevented in stores? 
+
+```{r}
+day_of_crime("Echo", "Theft Petit - Retail") / time_of_crime("Echo", "Theft Petit - Retail")
+```
+
+The offenses for retail theft are concentrated around 3PM. There is no clear pattern 
+in the day of the week in which these crimes occur.
 
 ## Foxtrot
 
@@ -560,29 +611,82 @@ The majority of thefts occur at Walmart, Lowe's and Target. All of these are wit
 mcc_zone("Foxtrot")
 ```
 
+Foxtrot observes a fairly steady level of crime for burglaries to conveyance. It is worth noting 
+that this area has not seen a drastic decrease in crime, as is observed in other zones.
+
 
 ```{r}
-area_plot("Foxtrot")
+area_plot("Foxtrot") + 
+  annotate("segment", color = "orangered", size = 1.1,
+           x = -82.37, xend = -82.36,
+           y = 29.628, yend = 29.633) +
+  
+  annotate("rect", color = "orangered", alpha = 0.3,
+           xmin = -82.37, xmax = -82.355,
+           ymin = 29.613, ymax = 29.623)
 ```
 
+The hostpots are concentrated in the center with a small belt of crime on the Northern wall.    
 
 ```{r}
 day_of_crime("Foxtrot") / time_of_crime("Foxtrot")
 ```
 
-##
+There is a continuation of the trend that burglaries to conveyance happen primarily during
+the darker hours of the day. 
+There is weak skew on the day of the week histogram, with more cases are observed in the beginning of the week.
+
+## Golf
 
 ```{r}
 mcc_zone("Golf")
 ```
 
+There has been a drastic theme shift in crime for Golf over the last 6 years.
+There has been a change from trespassing being a main crime to conveyance burglary being the most prevalent crime.
+Additionally, domestic battery has prevalent in this zone for 2020; historically as well.
+
+### Burglary to Conveyance
+
 ```{r}
-area_plot("Golf")
+area_plot("Golf") +
+  annotate("rect", color = "orangered", alpha = 0.3,
+           xmin = -82.34, xmax = -82.314,
+           ymin = 29.665, ymax = 29.688) 
 ```
+
+The area of focus should be the lower sections of this zone. There is also a small hotspot near the eastern enclave.    
 
 ```{r}
 day_of_crime("Golf") / time_of_crime("Golf")
 ```
+
+Unsurprisingly the theme for burglary of conveyance during later hours is continued.
+No particular day is correlated with crime.
+
+### Domestic Simple Battery
+
+```{r}
+area_plot("Golf", "Domestic Simple Battery") +
+  annotate("rect", color = "orangered", alpha = 0.3,
+           xmin = -82.33, xmax = -82.318,
+           ymin = 29.684, ymax = 29.695) +
+  annotate("curve", color = "orangered", size = 1,
+           x = -82.337, xend = -82.32,
+           y = 29.684, yend = 29.675,
+           curvature = 0.8)
+```
+
+There is a notable hotspot in the center, signified by the orange rectangle, and a small belt that is
+is centrally outlined by the curve.
+
+```{r}
+day_of_crime("Golf", "Domestic Simple Battery") / time_of_crime("Golf", "Domestic Simple Battery")
+```
+
+There isn't a particularly strong pattern in the time that these crimes occurs.
+Generally, domestic battery incidents happened later in the evening and there is not
+strong relationship with the day of the week.
 
 
 ## Hotel
@@ -591,15 +695,54 @@ day_of_crime("Golf") / time_of_crime("Golf")
 mcc_zone("Hotel")
 ```
 
+An interesting trend in zone Hotel is that Dcf investigations have been a major
+issue for a number of years. Additionally, the common crime of conveyance burglary shows up
+as a notable issue.
+
+### Dcf Investigations
 
 ```{r}
-area_plot("Hotel")
+area_plot("Hotel", "Dcf Investigations") +
+  annotate("rect", color = "orangered", alpha = 0.3,
+           xmin = -82.315, xmax = -82.304,
+           ymin = 29.667, ymax = 29.688) +
+  
+  annotate("rect", color = "orangered", alpha = 0.3,
+           xmin = -82.28, xmax = -82.274,
+           ymin = 29.677, ymax = 29.682) +
+  
+  annotate("rect", color = "orangered", alpha = 0.3,
+           xmin = -82.264, xmax = -82.258,
+           ymin = 29.673, ymax = 29.68)
 ```
+
+There are three major hotspots for dcf investigations. Since these investigation are 
+social issues, it is important to consider what can be done to help families care for their children.
+It would be difficult to justify an increase in police patrolling as a means to improve
+the quality of life for children in troubled homes.
+Therefore it is recommended that the community and local government help put in place programs
+to improve the overall environment in which these children are raised.
+
+Since Dcf investigations aren't necessarily a "on the spot" crime, much insight would not be gained by 
+observing the time in which these investigations happen.
+
+### Burglary to Conveyance 
+
+```{r}
+area_plot("Hotel") +
+  annotate("rect", color = "orangered", alpha = 0.3,
+           xmin = -82.315, xmax = -82.301,
+           ymin = 29.667, ymax = 29.693) 
+```
+
+The majority of crimes occur in the western region of the zone. There are a couple small spots that are nearby that also indicate issues, but the brunt of the crime happens within the rectangle.
 
 ```{r}
 day_of_crime("Hotel") / time_of_crime("Hotel")
 ```
 
+Yet again, observe that conveyance burglaries occur later in the day and hold
+no strong relationship with the day of the week histogram.
 
 ## India
 
@@ -607,14 +750,25 @@ day_of_crime("Hotel") / time_of_crime("Hotel")
 mcc_zone("India")
 ```
 
+India has seen a massive decrease in crime since 2015. The main crimes were trespassing and retail theft. In 2020, for the most part, those have been reduced greatly. Now the main issue is 
+burglary to conveyance.
 
 ```{r}
 area_plot("India")
 ```
 
+The overall spread is distributed fairly evenly across
+this area. Even the largest "hotspots" only account for 20 burglaries.
+Due to the sparsity of these crimes it could be surmised that increased police surveillance would 
+not make a drastic difference.
+
 ```{r}
 day_of_crime("India") / time_of_crime("India")
 ```
+
+The assumptions hold true to the overall trend,
+these crimes happen later in the day and it would be
+recommend to improved streetside lighting.
 
 ## Juliet
 
@@ -622,13 +776,46 @@ day_of_crime("India") / time_of_crime("India")
 mcc_zone("Juliet")
 ```
 
+As stated in the earlier sections of the report. Juliet sees a high number of
+petit retail theft. The numbers of these thefts have been reduced considerably in the 
+last year, even though it continues to be the main issue.
+
+
 ```{r}
 area_plot("Juliet", "Theft Petit - Retail")
 ```
 
+Similar to Echo, the hotspots seem to indicate a few key locations where the theft occurs.
+
+```{r}
+
+responses %>% 
+  filter(label == "Juliet" & incident_type == "Theft Petit - Retail") %>% 
+  group_by(address) %>% 
+  summarise(n =  n()) %>% 
+  top_n(n = 10, wt = n) %>% 
+  
+  ggplot() +
+  geom_col(aes(x = address, y = n), fill = "orangered") + 
+  coord_flip() +
+  
+  labs(title = "Theft Counts by Address") +
+  labs(subtitle = "Zone Echo") +
+  xlab("Address") +
+  ylab("No. of Thefts") +
+  
+  annotate("text", label = "Walmart", color = "white", size = 5,
+           y = 1050, x = 6)
+```
+
+The skew here is quite jarring. Walmart accounts almost entirely for all retail thefts.
+Similarly zone Echo, it is unsure if there is a simple solution to preventing in store crimes.
+
 ```{r}
 day_of_crime("Juliet",  "Theft Petit - Retail") / time_of_crime("Juliet", "Theft Petit - Retail")
 ```
+
+The crimes happen typically later in the day, and closer to the weekend.
 
 ## Mike 
 
@@ -636,14 +823,24 @@ day_of_crime("Juliet",  "Theft Petit - Retail") / time_of_crime("Juliet", "Theft
 mcc_zone("Mike")
 ```
 
+Zone Mike has also seen a drastic decrease in crime over the last couple years. Currently the biggest issue is, oddly, bicycle theft.
+
 ```{r}
-area_plot("Mike", "Theft Petit - Bicycle")
+area_plot("Mike", "Theft Petit - Bicycle") +
+  annotate("segment", color = "orangered",
+           x = -82.3356, xend = -82.3356,
+           y = 29.6428, yend = 29.654)
 ```
+
+See that the spread of the crimes is fairly even with a majority of the crimes happening 
+in proximity to orange line.
 
 ```{r}
 day_of_crime("Mike", "Theft Petit - Bicycle") / time_of_crime("Mike", "Theft Petit - Bicycle")
 ```
 
+Bicycle thefts peak in the early hours of the morning with no strong relationship to the day of the 
+week.
 
 ## November 
 
@@ -651,15 +848,33 @@ day_of_crime("Mike", "Theft Petit - Bicycle") / time_of_crime("Mike", "Theft Pet
 mcc_zone("November")
 ```
 
-```{r}
-area_plot("November")
-```
+For our final zone there is a steady decrease in crimes with the most common issue being
+conveyance burglary and domestic battery. However, the volume of these crimes is relatively low for both.
 
 
+# Conclusions
 
-```{r}
-day_of_crime("November") / time_of_crime("November")
-```
+Although crime has been greatly reduced in recent years there is still a big issue with burglary to conveyance and petit theft. For burglary to conveyance it is recommended that enhanced street side illumination be developed in the problem areas that have been identified. The benefits are numerous,
+extending past just crime prevention.
 
-We notice that the majority of crimes occur on Mondays and Wednesdays starting from 4PM to 9PM.
+For petit theft crimes it seems that there are 4 retail establishments that are the main areas where
+these crimes occur. Reducing retail theft is a complicated issue that doesn't have any simple solutions
+involving coordinating police within stores or around shopping districts.
+A good start may be to develop the local economy further and develop programs to distance the community from impoverishment.
+It should be acknowledged that looting and rioting due to 2020 political unrest likely has also contributed heavily to retail theft numbers.
+
+Furthermore, the massive spike in unemployment also gives further reason to the observation of higher retail theft.
+
+Dcf investigations are also a concerning problem in Zone Golf. Community programs should be explored 
+with the expressed goal of enabling parents to take better care of their children, and allowing  
+children to have better resources and safety if they belong to troubled homes.
+
+
+## Further Opportunities
+
+* Use street data to plot out police routed more precisely.
+* Research into causes and methods of petit theft prevention.
+* Forecasting crime zones and areas for future planning.
+* Use COVID-19 data in concert with crime data to possibly predict and model changes in criminal behavior.
+
 
